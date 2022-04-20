@@ -1,10 +1,10 @@
 package com.example.volume_android_revamp
 
-import android.content.Context
-import android.graphics.Color.red
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,32 +12,32 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.End
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.HorizontalAlignmentLine
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.volume_android_revamp.navigation.NavigationItem
 import com.example.volume_android_revamp.state.State
+import com.example.volume_android_revamp.ui.displayArticle
+import com.example.volume_android_revamp.ui.webView
 import com.example.volume_android_revamp.viewmodels.HomeTabViewModel
-import okhttp3.internal.http2.Header
-import org.intellij.lang.annotations.JdkConstants
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(homeTabViewModel: HomeTabViewModel){
     val trendingArticleState = homeTabViewModel.trendingArticlesState.collectAsState().value
     val otherArticleState = homeTabViewModel.allArticlesState.collectAsState().value
     LazyColumn() {
+        stickyHeader {
+            volumeTitle()
+        }
         item {
-            volumeTitle() }
+            Text(text = "The Big Read", modifier = Modifier.padding(start = 20.dp, top = 5.dp))
+        }
         trendingArticleState.value?.getTrendingArticles?.let {
             item {
                     when (val trendingArticlesState =
@@ -85,17 +85,20 @@ fun HomeScreen(homeTabViewModel: HomeTabViewModel){
 
 @Composable
 fun volumeTitle(){
-    Column{
-        Image(painter = painterResource(R.drawable.volume_icon), contentDescription = null, modifier = Modifier
-            .size(150.dp)
-            .padding(start = 20.dp, top = 0.dp, bottom = 40.dp, end = 0.dp))
-        Text(text = "The Big Read", modifier = Modifier.padding(start = 20.dp, top = 5.dp))
+    Row(modifier = Modifier
+        .background(colorResource(id = R.color.white))
+        .fillMaxWidth()){
+        Image(painter = painterResource(R.drawable.volumelogopic), contentDescription = null, modifier = Modifier
+            .scale(1.5f)
+            .padding(start = 20.dp, top = 20.dp, bottom = 15.dp, end = 0.dp))
     }
 }
 
 @Composable
 fun trendingArticleItem(data: TrendingArticlesQuery.GetTrendingArticle){
-    Column(modifier = Modifier.width(204.dp)) {
+    Column(modifier = Modifier
+        .width(204.dp)
+        .clickable { goToArticle(article = data) }) {
         AsyncImage(model = data.imageURL, modifier = Modifier
             .height(180.dp)
             .width(180.dp), contentDescription = null, contentScale = ContentScale.Crop)
@@ -110,7 +113,7 @@ fun otherArticleItem(data: AllArticlesQuery.GetAllArticle?){
     Box(modifier = Modifier
         .fillMaxHeight()
         .fillMaxWidth()
-        .padding(start = 20.dp)) {
+        .padding(start = 20.dp, bottom = 20.dp)) {
         Column {
             data?.publication?.let { Text(text = it.name) }
             if (data != null) {
@@ -131,3 +134,8 @@ fun otherArticleItem(data: AllArticlesQuery.GetAllArticle?){
 }
 
 fun truncateTitle(title: String):String = if (title.length > 57) (title.substring(0, 57) + "...") else title
+
+@Composable
+fun goToArticle(article: TrendingArticlesQuery.GetTrendingArticle){
+    displayArticle(article = article)
+}
